@@ -5,6 +5,9 @@ let spaceshipX = 50;
 let spaceshipY = 750;
 let spaceshipSpeed = 1;
 
+let state = "start";
+let gameTimer = 0;
+
 function setup() {
   createCanvas(1000, 750);
   frameRate(30);
@@ -15,19 +18,9 @@ function setup() {
   }
 }
 
-function draw() {
-  if (state === "start") {
-    startScreen();
-  } else if (state === "game") {
-    gameScreen();
-  } else if (state === "result") {
-    resultScreen();
-  }
-}
-
+// The style for the floating ufo on the start screen
 function ufo() {
   push();
-
   fill(85, 107, 47);
   ellipse(spaceshipX, spaceshipY, 50, 55);
 
@@ -43,10 +36,10 @@ function ufo() {
     spaceshipY - 5
   );
   endShape(CLOSE);
-
   pop();
 }
 
+// START SCREEN
 function startScreen() {
   background(0, 0, 0);
 
@@ -71,13 +64,19 @@ function startScreen() {
   textSize(50);
   text("Annie's Lunar Lander", 250, 250);
   textSize(20);
-  text("START", 450, 500);
+  text("PLAY", 450, 500);
 }
 
+// Style/animation for the game spaceship
 function gameSpaceship(x, y) {
   push();
   translate(x, y);
   noStroke();
+
+  if (startKeyPressed) {
+    gameSpaceshipY = gameSpaceshipY + velocity;
+    velocity = velocity + acceleration;
+  }
 
   //spaceship
   fill(200);
@@ -95,20 +94,24 @@ function gameSpaceship(x, y) {
   pop();
 }
 
+// MOON
 function moon() {
   push();
   fill(128);
-  ellipse(450, 780, 1200, 300);
+  ellipse(500, 800, 1200, 300);
   pop();
 }
 
 let gameSpaceshipY = 100;
 let velocity = 3;
 let acceleration = 0.2;
+let isGameActive = false;
+let startKeyPressed = false;
 
+// GAME SCREEN
 function gameScreen() {
   background(0, 0, 0);
-  text("Press Down Arrow Key To Start", 350, 150);
+  text("Press Down Arrow Key To Start", 350, 350);
 
   for (let index in starX) {
     fill(255, 255, 255, Math.abs(Math.sin(starAlpha[index])) * 255);
@@ -118,30 +121,65 @@ function gameScreen() {
 
   moon();
 
-  gameSpaceship(300, gameSpaceshipY);
-  gameSpaceshipY = gameSpaceshipY + velocity;
-  velocity = velocity + acceleration;
-  if (keyIsDown(40)) {
+  if (isGameActive) {
+    gameSpaceship(350, gameSpaceshipY);
+    gameSpaceshipY = gameSpaceshipY + velocity;
+    velocity = velocity + acceleration;
+  }
+
+  if (keyIsDown(40) && isGameActive) {
     velocity = velocity - 0.4;
   }
-  if (gameSpaceshipY > 600 && velocity > 3) {
-    // isGameActive = false;
+
+  // Checks for collision or successful landing
+  if (gameSpaceshipY > 480 && velocity > 4) {
+    isGameActive = false;
     state = "result";
+    crashScreen();
+  } else if (gameSpaceshipY > 480 && velocity < 4) {
+    isGameActive = false;
+    state = "result";
+    winScreen();
   }
 }
-
-function resultScreen() {
-  background(255, 0, 0);
-  text("Result", 200, 100);
-}
-
-let state = "start";
-let gameTimer = 0;
 
 function mouseClicked() {
   if (state === "start") {
     state = "game";
+  } else if (isGameActive == false && state === "game") {
+    state = "result";
+    isGameActive = true;
+    velocity = 2;
+    gameSpaceshipY = 100;
   } else if (state === "result") {
     state = "game";
+    isGameActive = true;
+    velocity = 3;
+    gameSpaceshipY = 100;
+  }
+}
+
+// CRASH/SUCCESS SCREENS
+function crashScreen() {
+  textSize(30);
+  text("Oh no you didn't make it... Try again!", 250, 300);
+}
+
+function winScreen() {
+  textSize(40);
+  text("YAAY", 400, 350);
+  text("You landed safely!", 300, 400);
+}
+
+// Draws the screen based on current state
+function draw() {
+  if (state === "start") {
+    startScreen();
+  }
+
+  if (isGameActive && state === "game") {
+    gameScreen();
+  } else if (isGameActive == false && state === "result") {
+    gameScreen();
   }
 }
