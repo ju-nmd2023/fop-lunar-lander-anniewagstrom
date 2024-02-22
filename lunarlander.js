@@ -21,10 +21,11 @@ function setup() {
 // The style for the floating ufo on the start screen
 function ufo() {
   push();
-  fill(85, 107, 47);
-  ellipse(spaceshipX, spaceshipY, 50, 55);
+  noStroke();
+  fill(200);
+  ellipse(spaceshipX, spaceshipY, 70, 20);
 
-  fill(90, 90, 90);
+  fill(120);
   beginShape();
   vertex(spaceshipX - 20, spaceshipY - 5);
   bezierVertex(
@@ -78,16 +79,31 @@ function gameSpaceship(x, y) {
     velocity = velocity + acceleration;
   }
 
+  // Flames animation when pressing Down arrow
+  if (keyIsDown(40) && isGameActive) {
+    for (let i = 0; i < 5; i++) {
+      let flameWidth = random(15, 30);
+      let flameHeight = random(30, 60);
+
+      let flameColors = [color(155, 165, 0), color(255, 255, 0)];
+
+      let flameColor = random(flameColors);
+      fill(flameColor);
+      ellipse(142, 150 + 15, flameWidth, flameHeight);
+    }
+  }
+
   //spaceship
   fill(200);
-  ellipse(142, 140, 90, 30);
+  ellipse(142, 140, 100, 30);
+  translate(10, -10);
 
   push();
 
   fill(120);
   beginShape();
   vertex(105, 140);
-  bezierVertex(105, 100, 180, 100, 180, 140);
+  bezierVertex(105, 100, 160, 100, 160, 140);
   endShape();
   pop();
 
@@ -100,6 +116,35 @@ function moon() {
   fill(128);
   ellipse(500, 800, 1200, 300);
   pop();
+
+  // moon circles from the left
+  push();
+  noStroke();
+  fill(50);
+  rotate(radians(-8));
+  ellipse(80, 730, 200, 50);
+  pop();
+
+  push();
+  noStroke();
+  fill(50);
+  rotate(radians(5));
+  ellipse(450, 720, 150, 60);
+  pop();
+
+  push();
+  noStroke();
+  fill(50);
+  rotate(radians(4));
+  ellipse(600, 650, 158, 50);
+  pop();
+
+  push();
+  noStroke();
+  fill(50);
+  rotate(radians(8));
+  ellipse(880, 610, 200, 50);
+  pop();
 }
 
 let gameSpaceshipY = 100;
@@ -111,7 +156,12 @@ let startKeyPressed = false;
 // GAME SCREEN
 function gameScreen() {
   background(0, 0, 0);
-  text("Press Down Arrow Key To Start", 350, 350);
+
+  if (!isGameActive) {
+    textSize(20);
+    fill(255);
+    text("Press Down Arrow Key To Start", 350, 300);
+  }
 
   for (let index in starX) {
     fill(255, 255, 255, Math.abs(Math.sin(starAlpha[index])) * 255);
@@ -122,30 +172,39 @@ function gameScreen() {
   moon();
 
   if (isGameActive) {
-    gameSpaceship(350, gameSpaceshipY);
     gameSpaceshipY = gameSpaceshipY + velocity;
     velocity = velocity + acceleration;
-  }
 
-  if (keyIsDown(40) && isGameActive) {
-    velocity = velocity - 0.4;
-  }
+    // Checks for collision or successful landing
+    if (gameSpaceshipY > 500 && velocity > 4) {
+      isGameActive = false;
+      state = "result";
+      crashScreen();
+    } else if (gameSpaceshipY > 500 && velocity < 4) {
+      isGameActive = false;
+      state = "result";
+      winScreen();
+    }
 
-  // Checks for collision or successful landing
-  if (gameSpaceshipY > 480 && velocity > 4) {
-    isGameActive = false;
-    state = "result";
-    crashScreen();
-  } else if (gameSpaceshipY > 480 && velocity < 4) {
-    isGameActive = false;
-    state = "result";
-    winScreen();
+    if (gameSpaceshipY > 600) {
+      isGameActive = false;
+      state = "result";
+      winScreen();
+    }
+    gameSpaceship(350, gameSpaceshipY);
+
+    if (keyIsDown(40) && !isGameActive) {
+      isGameActive = true;
+      gameSpaceshipY = 100;
+    }
   }
+  //  velocity = velocity - 0.4;
 }
 
 function mouseClicked() {
   if (state === "start") {
     state = "game";
+    isGameActive = true;
   } else if (isGameActive == false && state === "game") {
     state = "result";
     isGameActive = true;
